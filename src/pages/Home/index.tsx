@@ -6,6 +6,7 @@ import {
   EraserIcon,
   MinusCircleIcon,
   PencilSimpleIcon,
+  UploadSimpleIcon,
   WarningCircleIcon,
 } from "@phosphor-icons/react";
 import { Button } from "@elements/Button";
@@ -20,6 +21,7 @@ export function Home() {
   const [viewMode, setViewMode] = React.useState<ViewMode>("edit");
   const [error, setError] = React.useState<string | null>(null);
   const [copied, setCopied] = React.useState(false);
+  const [isDragging, setIsDragging] = React.useState(false);
 
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const gutterRef = React.useRef<HTMLDivElement>(null);
@@ -65,6 +67,40 @@ export function Home() {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+    setIsDragging(true);
+  }
+
+  function handleDragLeave(e: React.DragEvent) {
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    setIsDragging(false);
+  }
+
+  function handleDragEnd() {
+    setIsDragging(false);
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result;
+      if (typeof text === "string") {
+        setInput(text);
+        setError(null);
+        setViewMode("edit");
+      }
+    };
+    reader.readAsText(file);
+  }
+
   function syncGutterScroll(scrollTop: number) {
     if (gutterRef.current) gutterRef.current.scrollTop = scrollTop;
   }
@@ -80,7 +116,28 @@ export function Home() {
   }
 
   return (
-    <div id="home" className="flex flex-1 overflow-hidden">
+    <div
+      id="home"
+      className="flex flex-1 overflow-hidden relative"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDragEnd={handleDragEnd}
+      onDrop={handleDrop}
+    >
+      {isDragging && (
+        <div
+          id="drag-overlay"
+          aria-hidden="true"
+          className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-3 bg-background/85 backdrop-blur-sm border-2 border-dashed border-foreground/20 pointer-events-none"
+          style={{ animation: "fade-in 0.15s ease forwards" }}
+        >
+          <UploadSimpleIcon weight="thin" size={48} className="opacity-40" />
+          <span className="font-mono text-xs text-muted-foreground/60 tracking-widest uppercase select-none">
+            Drop XML file to load
+          </span>
+        </div>
+      )}
+
       <div
         id="editor-area"
         className="flex flex-1 overflow-hidden font-mono text-sm leading-relaxed"
