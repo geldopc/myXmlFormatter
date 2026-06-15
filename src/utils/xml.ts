@@ -3,6 +3,22 @@ export type ProcessResult = {
   error: string | null;
 };
 
+export type SanitizeResult = {
+  value: string;
+  removedCount: number;
+};
+
+export function sanitizeXml(xml: string): SanitizeResult {
+  let removedCount = 0;
+  // Strip malformed pseudo-comments: <-- ... --> (missing the ! after <)
+  const cleaned = xml.replace(/<--[\s\S]*?-->/g, () => {
+    removedCount++;
+    return "";
+  });
+  // Collapse excessive blank lines left behind by removals
+  return { value: cleaned.replace(/\n{3,}/g, "\n\n"), removedCount };
+}
+
 export function formatXml(input: string): ProcessResult {
   const trimmed = input.trim();
   if (!trimmed) return { value: "", error: "Input is empty" };

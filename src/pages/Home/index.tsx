@@ -1,5 +1,6 @@
 import * as React from "react";
 import {
+  BroomIcon,
   CheckIcon,
   CodeIcon,
   CopyIcon,
@@ -12,7 +13,7 @@ import {
 } from "@phosphor-icons/react";
 import { Button } from "@elements/Button";
 import { ThemeToggle } from "@widgets/ThemeToggle";
-import { formatXml, minifyXml } from "@utils/xml";
+import { formatXml, minifyXml, sanitizeXml } from "@utils/xml";
 import { highlightXml } from "@utils/xmlHighlight";
 import { decodeFromUrl, encodeForUrl } from "@utils/encoding";
 
@@ -24,6 +25,7 @@ export function Home() {
   const [error, setError] = React.useState<string | null>(null);
   const [copied, setCopied] = React.useState(false);
   const [sharedCopied, setSharedCopied] = React.useState(false);
+  const [sanitizedCount, setSanitizedCount] = React.useState(0);
   const [isDragging, setIsDragging] = React.useState(false);
   const [urlLoaded, setUrlLoaded] = React.useState(false);
 
@@ -57,13 +59,18 @@ export function Home() {
 
   function process(fmt: "pretty" | "minify") {
     if (!input.trim()) return;
-    const result = fmt === "pretty" ? formatXml(input) : minifyXml(input);
+    const { value: sanitized, removedCount } = sanitizeXml(input);
+    const result = fmt === "pretty" ? formatXml(sanitized) : minifyXml(sanitized);
     if (result.error) {
       setError(result.error);
       setViewMode("edit");
     } else {
       setInput(result.value);
       setError(null);
+      if (removedCount > 0) {
+        setSanitizedCount(removedCount);
+        setTimeout(() => setSanitizedCount(0), 4000);
+      }
       setViewMode(fmt === "pretty" ? "formatted" : "minified");
     }
   }
@@ -237,6 +244,19 @@ export function Home() {
           <div className="w-1.5 h-1.5 rounded-full bg-green-500/70" />
           <span className="font-mono text-xs text-muted-foreground/40 tracking-widest uppercase">
             {viewMode}
+          </span>
+        </div>
+      )}
+
+      {sanitizedCount > 0 && (
+        <div
+          id="sanitize-toast"
+          className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-xl border border-border bg-background/90 backdrop-blur-xl px-4 py-3 text-foreground/60 text-xs max-w-sm shadow-lg"
+          style={{ animation: "slide-up 0.3s cubic-bezier(0.16,1,0.3,1) both" }}
+        >
+          <BroomIcon weight="duotone" className="shrink-0" size={13} />
+          <span className="font-mono leading-relaxed">
+            {sanitizedCount} invalid {sanitizedCount === 1 ? "pattern" : "patterns"} removed
           </span>
         </div>
       )}
