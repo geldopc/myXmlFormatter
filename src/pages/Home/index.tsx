@@ -11,6 +11,7 @@ import {
 import { Button } from "@elements/Button";
 import { ThemeToggle } from "@widgets/ThemeToggle";
 import { formatXml, minifyXml } from "@utils/xml";
+import { highlightXml } from "@utils/xmlHighlight";
 
 type ViewMode = "edit" | "formatted" | "minified";
 
@@ -26,6 +27,11 @@ export function Home() {
   const lineCount = React.useMemo(
     () => Math.max(1, input.split("\n").length),
     [input]
+  );
+
+  const highlightedXml = React.useMemo(
+    () => (viewMode !== "edit" ? highlightXml(input) : ""),
+    [input, viewMode]
   );
 
   function process(fmt: "pretty" | "minify") {
@@ -119,10 +125,9 @@ export function Home() {
             onKeyDown={handleKeyDown}
             onClick={handleBackToEdit}
             onScroll={(e) => syncGutterScroll(e.currentTarget.scrollTop)}
-            className="flex-1 overflow-auto pt-8 pb-28 pl-4 pr-6 cursor-text focus:outline-none text-foreground/85 whitespace-pre"
-          >
-            {input}
-          </pre>
+            className="flex-1 overflow-auto pt-8 pb-28 pl-4 pr-6 cursor-text focus:outline-none whitespace-pre"
+            dangerouslySetInnerHTML={{ __html: highlightedXml }}
+          />
         )}
       </div>
 

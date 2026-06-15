@@ -161,3 +161,17 @@ h6 {
   background-repeat: repeat;
   background-size: 200px;
 }
+
+/* ── Dracula XML syntax highlight ─────────────────── */
+:root,
+.dark {
+  --xml-color-tag: #8be9fd;
+  --xml-color-attr-name: #50fa7b;
+  --xml-color-attr-value: #f1fa8c;
+  --xml-color-text: #f8f8f2;
+  --xml-color-comment: #6272a4;
+  --xml-color-pi: #ff79c6;
+  --xml-color-cdata: #ffb86c;
+  --xml-color-doctype: #bd93f9;
+  --xml-color-punct: #ff79c6;
+}
