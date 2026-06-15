@@ -4,6 +4,7 @@ import {
   CodeIcon,
   CopyIcon,
   EraserIcon,
+  LinkIcon,
   MinusCircleIcon,
   PencilSimpleIcon,
   UploadSimpleIcon,
@@ -13,6 +14,7 @@ import { Button } from "@elements/Button";
 import { ThemeToggle } from "@widgets/ThemeToggle";
 import { formatXml, minifyXml } from "@utils/xml";
 import { highlightXml } from "@utils/xmlHighlight";
+import { decodeFromUrl, encodeForUrl } from "@utils/encoding";
 
 type ViewMode = "edit" | "formatted" | "minified";
 
@@ -21,7 +23,24 @@ export function Home() {
   const [viewMode, setViewMode] = React.useState<ViewMode>("edit");
   const [error, setError] = React.useState<string | null>(null);
   const [copied, setCopied] = React.useState(false);
+  const [sharedCopied, setSharedCopied] = React.useState(false);
   const [isDragging, setIsDragging] = React.useState(false);
+  const [urlLoaded, setUrlLoaded] = React.useState(false);
+
+  React.useEffect(() => {
+    const param = new URLSearchParams(window.location.search).get("xml");
+    if (!param) {
+      setUrlLoaded(true);
+      return;
+    }
+    decodeFromUrl(param)
+      .then((xml) => {
+        setInput(xml);
+        setViewMode("formatted");
+      })
+      .catch(() => {})
+      .finally(() => setUrlLoaded(true));
+  }, []);
 
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const gutterRef = React.useRef<HTMLDivElement>(null);
@@ -49,15 +68,32 @@ export function Home() {
     }
   }
 
+  function clearUrlParam() {
+    if (window.location.search) {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }
+
   function handleBackToEdit() {
+    clearUrlParam();
     setViewMode("edit");
     requestAnimationFrame(() => textareaRef.current?.focus());
   }
 
   function handleClear() {
+    clearUrlParam();
     setInput("");
     setError(null);
     setViewMode("edit");
+  }
+
+  async function handleShare() {
+    const encoded = await encodeForUrl(input);
+    const url = `${window.location.origin}${window.location.pathname}?xml=${encoded}`;
+    window.history.replaceState(null, "", url);
+    await navigator.clipboard.writeText(url);
+    setSharedCopied(true);
+    setTimeout(() => setSharedCopied(false), 2000);
   }
 
   async function handleCopy() {
@@ -105,15 +141,21 @@ export function Home() {
     if (gutterRef.current) gutterRef.current.scrollTop = scrollTop;
   }
 
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "F") {
-      e.preventDefault();
-      process("pretty");
+  React.useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        if (viewMode === "edit") process("pretty");
+      }
+      if (e.key === "Escape" && viewMode !== "edit") {
+        handleBackToEdit();
+      }
     }
-    if (e.key === "Escape" && viewMode !== "edit") {
-      handleBackToEdit();
-    }
-  }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [viewMode, input]);
+
+  if (!urlLoaded) return null;
 
   return (
     <div
@@ -167,7 +209,6 @@ export function Home() {
               setInput(e.target.value);
               setError(null);
             }}
-            onKeyDown={handleKeyDown}
             onScroll={(e) => syncGutterScroll(e.currentTarget.scrollTop)}
             placeholder={"<root>\n  <paste>your XML here</paste>\n</root>"}
             spellCheck={false}
@@ -179,7 +220,6 @@ export function Home() {
             id="xml-output"
             // biome-ignore lint/a11y/noNoninteractiveTabindex: pre acts as a focusable read-only editor pane
             tabIndex={0}
-            onKeyDown={handleKeyDown}
             onClick={handleBackToEdit}
             onScroll={(e) => syncGutterScroll(e.currentTarget.scrollTop)}
             className="flex-1 overflow-auto pt-8 pb-28 pl-4 pr-6 cursor-text focus:outline-none whitespace-pre"
@@ -291,6 +331,25 @@ export function Home() {
                 </>
               )}
             </Button>
+            <Button
+              id="btn-share"
+              size="sm"
+              variant="ghost"
+              onClick={handleShare}
+              className="rounded-full h-8 px-4 text-xs"
+            >
+              {sharedCopied ? (
+                <>
+                  <CheckIcon weight="bold" />
+                  Shared!
+                </>
+              ) : (
+                <>
+                  <LinkIcon weight="bold" />
+                  Share
+                </>
+              )}
+            </Button>
             <div className="w-px h-4 bg-border/70 mx-1" />
             <Button
               id="btn-clear"
@@ -307,7 +366,7 @@ export function Home() {
 
         <div className="w-px h-4 bg-border/70 mx-1" />
         <span className="font-mono text-xs text-muted-foreground/50 px-3 select-none tracking-wider">
-          ⌘⇧F
+          ⌘↵
         </span>
       </div>
     </div>

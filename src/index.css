@@ -162,8 +162,20 @@ h6 {
   background-size: 200px;
 }
 
-/* ── Dracula XML syntax highlight ─────────────────── */
-:root,
+/* ── XML syntax highlight — light mode ──────────────── */
+:root {
+  --xml-color-tag: #0077cc;
+  --xml-color-attr-name: #1a8300;
+  --xml-color-attr-value: #c07000;
+  --xml-color-text: #333333;
+  --xml-color-comment: #6b7280;
+  --xml-color-pi: #c026a5;
+  --xml-color-cdata: #c06000;
+  --xml-color-doctype: #7c3aed;
+  --xml-color-punct: #c026a5;
+}
+
+/* ── XML syntax highlight — dark mode (Dracula) ─────── */
 .dark {
   --xml-color-tag: #8be9fd;
   --xml-color-attr-name: #50fa7b;
