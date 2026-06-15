@@ -8,7 +8,7 @@ honor its STOP conditions, and update your row when done.
 
 | Plan | Title | Priority | Effort | Depends on | Status |
 |------|-------|----------|--------|------------|--------|
-| [001](001-editor-ui-redesign.md) | Replace split-panel with full-screen single-pane editor (no navbar, line numbers, in-place format) | P1 | M | — | TODO |
+| [001](001-editor-ui-redesign.md) | Replace split-panel with full-screen single-pane editor (no navbar, line numbers, in-place format) | P1 | M | — | DONE |
 | [002](002-dracula-syntax-highlight.md) | Add Dracula-themed XML syntax highlighting to view mode | P1 | M | 001 | TODO |
 | [003](003-drag-drop-file.md) | Add drag-and-drop XML file input | P2 | S | 001 | TODO |
 | [004](004-shareable-url.md) | Add URL-based shareable state | P2 | M | 001 | TODO |
