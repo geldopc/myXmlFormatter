@@ -220,7 +220,7 @@ export function Home() {
             placeholder={"<root>\n  <paste>your XML here</paste>\n</root>"}
             spellCheck={false}
             wrap="off"
-            className="flex-1 resize-none bg-transparent outline-none text-foreground dark:text-white dark:subpixel-antialiased placeholder:text-muted-foreground/20 pt-8 pb-28 pl-4 pr-6 overflow-auto"
+            className="flex-1 resize-none bg-transparent outline-none text-foreground dark:text-white dark:subpixel-antialiased placeholder:text-muted-foreground/60 pt-8 pb-28 pl-4 pr-6 overflow-auto"
           />
         ) : (
           <pre
