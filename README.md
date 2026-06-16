@@ -4,6 +4,8 @@
 
 <div align="center">
 
+<img src="public/android-chrome-512x512.png" alt="myXmlFormatter logo" width="96" height="96" />
+
 # myXmlFormatter
 
 **A minimal, full-screen XML formatter built with React 19 and TypeScript.**

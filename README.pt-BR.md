@@ -4,6 +4,8 @@
 
 <div align="center">
 
+<img src="public/android-chrome-512x512.png" alt="Logo do myXmlFormatter" width="96" height="96" />
+
 # myXmlFormatter
 
 **Um formatador de XML minimalista e em tela cheia, construído com React 19 e TypeScript.**
