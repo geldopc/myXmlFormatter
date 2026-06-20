@@ -17,6 +17,7 @@ import { decodeFromUrl, encodeForUrl } from "@utils/encoding";
 import { isMac } from "@utils/platform";
 import { formatXml, minifyXml, sanitizeXml } from "@utils/xml";
 import { FindReplace } from "@widgets/FindReplace";
+import { ThemeToggle } from "@widgets/ThemeToggle";
 import * as React from "react";
 import { toast } from "sonner";
 
@@ -192,9 +193,7 @@ export function Home() {
             viewRef.current = view;
           }}
         />
-        {isFindOpen && (
-          <FindReplace view={viewRef.current} onClose={() => setIsFindOpen(false)} />
-        )}
+        {isFindOpen && <FindReplace view={viewRef.current} onClose={() => setIsFindOpen(false)} />}
       </div>
 
       <div
@@ -344,6 +343,8 @@ export function Home() {
               </>
             )}
           </span>
+          <div className="mx-1 h-4 w-px bg-border/70" />
+          <ThemeToggle />
         </div>
       </div>
     </div>
