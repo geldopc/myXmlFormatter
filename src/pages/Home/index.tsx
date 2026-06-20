@@ -1,33 +1,34 @@
-import * as React from "react";
+import { foldAll, unfoldAll } from "@codemirror/language";
+import { EditorView } from "@codemirror/view";
+import { Button } from "@elements/Button";
+import { Tooltip } from "@elements/Tooltip";
+import { XmlEditor } from "@modules/XmlEditor";
 import {
-  BroomIcon,
-  CheckIcon,
+  ArrowsInSimpleIcon,
+  ArrowsOutSimpleIcon,
   CodeIcon,
   CopyIcon,
   EraserIcon,
   LinkIcon,
   MinusCircleIcon,
-  PencilSimpleIcon,
   UploadSimpleIcon,
-  WarningCircleIcon,
 } from "@phosphor-icons/react";
-import { Button } from "@elements/Button";
-import { ThemeToggle } from "@widgets/ThemeToggle";
-import { formatXml, minifyXml, sanitizeXml } from "@utils/xml";
-import { highlightXml } from "@utils/xmlHighlight";
 import { decodeFromUrl, encodeForUrl } from "@utils/encoding";
-
-type ViewMode = "edit" | "formatted" | "minified";
+import { isMac } from "@utils/platform";
+import { formatXml, minifyXml, sanitizeXml } from "@utils/xml";
+import { FindReplace } from "@widgets/FindReplace";
+import * as React from "react";
+import { toast } from "sonner";
 
 export function Home() {
   const [input, setInput] = React.useState("");
-  const [viewMode, setViewMode] = React.useState<ViewMode>("edit");
-  const [error, setError] = React.useState<string | null>(null);
-  const [copied, setCopied] = React.useState(false);
-  const [sharedCopied, setSharedCopied] = React.useState(false);
-  const [sanitizedCount, setSanitizedCount] = React.useState(0);
   const [isDragging, setIsDragging] = React.useState(false);
   const [urlLoaded, setUrlLoaded] = React.useState(false);
+  const [isFindOpen, setIsFindOpen] = React.useState(false);
+
+  const viewRef = React.useRef<EditorView | null>(null);
+  const inputRef = React.useRef(input);
+  inputRef.current = input;
 
   React.useEffect(() => {
     const param = new URLSearchParams(window.location.search).get("xml");
@@ -36,43 +37,34 @@ export function Home() {
       return;
     }
     decodeFromUrl(param)
-      .then((xml) => {
-        setInput(xml);
-        setViewMode("formatted");
-      })
+      .then((xml) => setInput(xml))
       .catch(() => {})
       .finally(() => setUrlLoaded(true));
   }, []);
 
-  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
-  const gutterRef = React.useRef<HTMLDivElement>(null);
-
-  const lineCount = React.useMemo(
-    () => Math.max(1, input.split("\n").length),
-    [input]
-  );
-
-  const highlightedXml = React.useMemo(
-    () => (viewMode !== "edit" ? highlightXml(input) : ""),
-    [input, viewMode]
-  );
-
   function process(fmt: "pretty" | "minify") {
-    if (!input.trim()) return;
-    const { value: sanitized, removedCount } = sanitizeXml(input);
+    const current = inputRef.current;
+    if (!current.trim()) return;
+    const { value: sanitized, removedCount } = sanitizeXml(current);
     const result = fmt === "pretty" ? formatXml(sanitized) : minifyXml(sanitized);
     if (result.error) {
-      setError(result.error);
-      setViewMode("edit");
-    } else {
-      setInput(result.value);
-      setError(null);
-      if (removedCount > 0) {
-        setSanitizedCount(removedCount);
-        setTimeout(() => setSanitizedCount(0), 4000);
-      }
-      setViewMode(fmt === "pretty" ? "formatted" : "minified");
+      toast.error("That doesn't look like XML", { description: result.error });
+      return;
     }
+    setInput(result.value);
+    requestAnimationFrame(() => {
+      viewRef.current?.dispatch({
+        selection: { anchor: 0 },
+        effects: EditorView.scrollIntoView(0, { y: "start" }),
+      });
+    });
+    const fixNote =
+      removedCount > 0
+        ? `Tidied up ${removedCount} thing${removedCount === 1 ? "" : "s"} along the way.`
+        : undefined;
+    toast.success(fmt === "pretty" ? "Prettified" : "Minified", {
+      description: fixNote ?? (fmt === "pretty" ? "Looking sharp." : "Every byte counts."),
+    });
   }
 
   function clearUrlParam() {
@@ -81,17 +73,10 @@ export function Home() {
     }
   }
 
-  function handleBackToEdit() {
-    clearUrlParam();
-    setViewMode("edit");
-    requestAnimationFrame(() => textareaRef.current?.focus());
-  }
-
   function handleClear() {
     clearUrlParam();
     setInput("");
-    setError(null);
-    setViewMode("edit");
+    toast("Cleared", { description: "Fresh start." });
   }
 
   async function handleShare() {
@@ -99,15 +84,15 @@ export function Home() {
     const url = `${window.location.origin}${window.location.pathname}?xml=${encoded}`;
     window.history.replaceState(null, "", url);
     await navigator.clipboard.writeText(url);
-    setSharedCopied(true);
-    setTimeout(() => setSharedCopied(false), 2000);
+    toast.success("Share link copied", {
+      description: "Paste it anywhere — the XML travels with it.",
+    });
   }
 
   async function handleCopy() {
     if (!input) return;
     await navigator.clipboard.writeText(input);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    toast.success("Copied", { description: "The XML is on your clipboard." });
   }
 
   function handleDragOver(e: React.DragEvent) {
@@ -128,46 +113,55 @@ export function Home() {
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
     setIsDragging(false);
-
     const file = e.dataTransfer.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (event) => {
       const text = event.target?.result;
       if (typeof text === "string") {
         setInput(text);
-        setError(null);
-        setViewMode("edit");
+        toast.success("File loaded", { description: file.name });
       }
     };
     reader.readAsText(file);
   }
 
-  function syncGutterScroll(scrollTop: number) {
-    if (gutterRef.current) gutterRef.current.scrollTop = scrollTop;
+  function handleFoldAll() {
+    if (!viewRef.current) return;
+    foldAll(viewRef.current);
   }
 
+  function handleUnfoldAll() {
+    if (!viewRef.current) return;
+    unfoldAll(viewRef.current);
+  }
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: process reads input via inputRef; only isFindOpen affects the handler
   React.useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
         e.preventDefault();
-        if (viewMode === "edit") process("pretty");
+        process("pretty");
       }
-      if (e.key === "Escape" && viewMode !== "edit") {
-        handleBackToEdit();
+      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
+        e.preventDefault();
+        setIsFindOpen((v) => !v);
+      }
+      if (e.key === "Escape" && isFindOpen) {
+        setIsFindOpen(false);
       }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [viewMode, input]);
+  }, [isFindOpen]);
 
   if (!urlLoaded) return null;
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: drag-and-drop container needs native drag events
     <div
       id="home"
-      className="flex flex-1 overflow-hidden relative"
+      className="relative flex flex-1 overflow-hidden"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDragEnd={handleDragEnd}
@@ -189,205 +183,168 @@ export function Home() {
 
       <div
         id="editor-area"
-        className="flex flex-1 overflow-hidden font-mono text-sm leading-relaxed"
+        className="relative flex flex-1 overflow-hidden font-mono text-sm leading-relaxed"
       >
-        <div
-          ref={gutterRef}
-          id="line-gutter"
-          aria-hidden="true"
-          className="shrink-0 select-none text-right text-muted-foreground/25 overflow-hidden pt-8 pb-28 pr-3 pl-4 min-w-12"
-        >
-          {Array.from({ length: lineCount }, (_, i) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: line numbers are stable positional indices
-            <div key={i + 1} className="leading-relaxed">
-              {i + 1}
-            </div>
-          ))}
-        </div>
-
-        <div className="w-px bg-border/25 shrink-0" />
-
-        {viewMode === "edit" ? (
-          <textarea
-            ref={textareaRef}
-            id="xml-input"
-            value={input}
-            onChange={(e) => {
-              setInput(e.target.value);
-              setError(null);
-            }}
-            onScroll={(e) => syncGutterScroll(e.currentTarget.scrollTop)}
-            placeholder={"<root>\n  <paste>your XML here</paste>\n</root>"}
-            spellCheck={false}
-            wrap="off"
-            className="flex-1 resize-none bg-transparent outline-none text-foreground dark:text-white dark:subpixel-antialiased placeholder:text-muted-foreground/60 pt-8 pb-28 pl-4 pr-6 overflow-auto"
-          />
-        ) : (
-          <pre
-            id="xml-output"
-            // biome-ignore lint/a11y/noNoninteractiveTabindex: pre acts as a focusable read-only editor pane
-            tabIndex={0}
-            onClick={handleBackToEdit}
-            onScroll={(e) => syncGutterScroll(e.currentTarget.scrollTop)}
-            className="flex-1 overflow-auto pt-8 pb-28 pl-4 pr-6 cursor-text focus:outline-none whitespace-pre"
-            dangerouslySetInnerHTML={{ __html: highlightedXml }}
-          />
+        <XmlEditor
+          value={input}
+          onChange={setInput}
+          onCreateEditor={(view) => {
+            viewRef.current = view;
+          }}
+        />
+        {isFindOpen && (
+          <FindReplace view={viewRef.current} onClose={() => setIsFindOpen(false)} />
         )}
       </div>
 
-      {viewMode !== "edit" && (
-        <div
-          id="status-badge"
-          className="fixed top-4 right-6 z-50 flex items-center gap-1.5 select-none pointer-events-none"
-          style={{ animation: "fade-in 0.2s ease forwards" }}
-        >
-          <div className="w-1.5 h-1.5 rounded-full bg-green-500/70" />
-          <span className="font-mono text-xs text-muted-foreground/40 tracking-widest uppercase">
-            {viewMode}
-          </span>
-        </div>
-      )}
-
-      {sanitizedCount > 0 && (
-        <div
-          id="sanitize-toast"
-          className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-xl border border-border bg-background/90 backdrop-blur-xl px-4 py-3 text-foreground/60 text-xs max-w-sm shadow-lg"
-          style={{ animation: "slide-up 0.3s cubic-bezier(0.16,1,0.3,1) both" }}
-        >
-          <BroomIcon weight="duotone" className="shrink-0" size={13} />
-          <span className="font-mono leading-relaxed">
-            {sanitizedCount} invalid {sanitizedCount === 1 ? "pattern" : "patterns"} removed
-          </span>
-        </div>
-      )}
-
-      {error && (
-        <div
-          id="error-toast"
-          className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-start gap-2 rounded-xl border border-destructive/25 bg-background/90 backdrop-blur-xl px-4 py-3 text-destructive text-xs max-w-sm shadow-lg"
-          style={{ animation: "slide-up 0.3s cubic-bezier(0.16,1,0.3,1) both" }}
-        >
-          <WarningCircleIcon weight="fill" className="mt-0.5 shrink-0" size={13} />
-          <span className="font-mono break-all leading-relaxed">{error}</span>
-        </div>
-      )}
-
       <div
-        id="floating-toolbar"
-        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-0.5 rounded-full border border-border bg-background/80 backdrop-blur-xl px-1.5 py-1.5 shadow-2xl"
+        id="floating-toolbar-pos"
+        className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2"
         style={{ animation: "slide-up 0.5s cubic-bezier(0.16,1,0.3,1) both" }}
       >
-        <ThemeToggle />
+        <div
+          id="floating-toolbar"
+          className="flex items-center gap-0.5 rounded-full border border-border bg-background/80 backdrop-blur-xl px-1.5 py-1.5 shadow-2xl"
+        >
+          <Button
+            id="btn-pretty"
+            size="sm"
+            onClick={() => process("pretty")}
+            disabled={!input.trim()}
+            className="rounded-full h-8 px-2 sm:pl-4 sm:pr-2 text-xs"
+          >
+            <CodeIcon weight="bold" />
+            <span className="hidden sm:inline">Prettify</span>
+            <span id="kbd-pretty" className="hidden sm:inline-flex items-center gap-0.5 ml-1">
+              {isMac() ? (
+                <>
+                  <kbd className="rounded border border-primary-foreground/25 bg-primary-foreground/10 px-1 py-0.5 font-mono text-xs text-primary-foreground/70 select-none">
+                    ⌘
+                  </kbd>
+                  <span className="font-mono text-xs text-primary-foreground/40">+</span>
+                  <kbd className="rounded border border-primary-foreground/25 bg-primary-foreground/10 px-1 py-0.5 font-mono text-xs text-primary-foreground/70 select-none">
+                    ↵
+                  </kbd>
+                </>
+              ) : (
+                <>
+                  <kbd className="rounded border border-primary-foreground/25 bg-primary-foreground/10 px-1 py-0.5 font-mono text-xs text-primary-foreground/70 select-none">
+                    Ctrl
+                  </kbd>
+                  <span className="font-mono text-xs text-primary-foreground/40">+</span>
+                  <kbd className="rounded border border-primary-foreground/25 bg-primary-foreground/10 px-1 py-0.5 font-mono text-xs text-primary-foreground/70 select-none">
+                    ↵
+                  </kbd>
+                </>
+              )}
+            </span>
+          </Button>
 
-        <div className="w-px h-4 bg-border/70 mx-1" />
-
-        {viewMode === "edit" ? (
-          <>
-            <Button
-              id="btn-pretty"
-              size="sm"
-              onClick={() => process("pretty")}
-              disabled={!input.trim()}
-              className="rounded-full h-8 px-4 text-xs"
-            >
-              <CodeIcon weight="bold" />
-              Prettify
-            </Button>
+          <Tooltip label="bye, whitespace">
             <Button
               id="btn-minify"
-              size="sm"
+              size="icon"
               variant="ghost"
               onClick={() => process("minify")}
               disabled={!input.trim()}
-              className="rounded-full h-8 px-4 text-xs"
+              className="rounded-full"
             >
               <MinusCircleIcon weight="bold" />
-              Minify
             </Button>
-            {input && (
-              <>
-                <div className="w-px h-4 bg-border/70 mx-1" />
+          </Tooltip>
+
+          <div className="mx-1 h-4 w-px bg-border/70" />
+
+          <Tooltip label="fold all">
+            <Button
+              id="btn-fold-all"
+              size="icon"
+              variant="ghost"
+              onClick={handleFoldAll}
+              disabled={!input.trim()}
+              className="rounded-full"
+            >
+              <ArrowsInSimpleIcon weight="bold" />
+            </Button>
+          </Tooltip>
+
+          <Tooltip label="unfold all">
+            <Button
+              id="btn-unfold-all"
+              size="icon"
+              variant="ghost"
+              onClick={handleUnfoldAll}
+              disabled={!input.trim()}
+              className="rounded-full"
+            >
+              <ArrowsOutSimpleIcon weight="bold" />
+            </Button>
+          </Tooltip>
+
+          {input && (
+            <>
+              <div className="mx-1 h-4 w-px bg-border/70" />
+              <Tooltip label="yoink">
+                <Button
+                  id="btn-copy"
+                  size="icon"
+                  variant="ghost"
+                  onClick={handleCopy}
+                  className="rounded-full"
+                >
+                  <CopyIcon weight="bold" />
+                </Button>
+              </Tooltip>
+              <Tooltip label="spread the XML">
+                <Button
+                  id="btn-share"
+                  size="icon"
+                  variant="ghost"
+                  onClick={handleShare}
+                  className="rounded-full"
+                >
+                  <LinkIcon weight="bold" />
+                </Button>
+              </Tooltip>
+              <Tooltip label="burn it all">
                 <Button
                   id="btn-clear"
-                  size="sm"
+                  size="icon"
                   variant="ghost"
                   onClick={handleClear}
-                  className="rounded-full h-8 px-4 text-xs"
+                  className="rounded-full"
                 >
                   <EraserIcon weight="bold" />
-                  Clear
                 </Button>
+              </Tooltip>
+            </>
+          )}
+
+          <div className="mx-1 hidden h-4 w-px bg-border/70 sm:block" />
+          <span id="kbd-find-hint" className="hidden sm:inline-flex items-center gap-0.5 px-2">
+            {isMac() ? (
+              <>
+                <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-mono text-xs text-muted-foreground select-none">
+                  ⌘
+                </kbd>
+                <span className="font-mono text-xs text-muted-foreground/40">+</span>
+                <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-mono text-xs text-muted-foreground select-none">
+                  F
+                </kbd>
+              </>
+            ) : (
+              <>
+                <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-mono text-xs text-muted-foreground select-none">
+                  Ctrl
+                </kbd>
+                <span className="font-mono text-xs text-muted-foreground/40">+</span>
+                <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-mono text-xs text-muted-foreground select-none">
+                  F
+                </kbd>
               </>
             )}
-          </>
-        ) : (
-          <>
-            <Button
-              id="btn-edit"
-              size="sm"
-              variant="ghost"
-              onClick={handleBackToEdit}
-              className="rounded-full h-8 px-4 text-xs"
-            >
-              <PencilSimpleIcon weight="bold" />
-              Edit
-            </Button>
-            <Button
-              id="btn-copy"
-              size="sm"
-              variant="ghost"
-              onClick={handleCopy}
-              className="rounded-full h-8 px-4 text-xs"
-            >
-              {copied ? (
-                <>
-                  <CheckIcon weight="bold" />
-                  Copied
-                </>
-              ) : (
-                <>
-                  <CopyIcon weight="bold" />
-                  Copy
-                </>
-              )}
-            </Button>
-            <Button
-              id="btn-share"
-              size="sm"
-              variant="ghost"
-              onClick={handleShare}
-              className="rounded-full h-8 px-4 text-xs"
-            >
-              {sharedCopied ? (
-                <>
-                  <CheckIcon weight="bold" />
-                  Shared!
-                </>
-              ) : (
-                <>
-                  <LinkIcon weight="bold" />
-                  Share
-                </>
-              )}
-            </Button>
-            <div className="w-px h-4 bg-border/70 mx-1" />
-            <Button
-              id="btn-clear"
-              size="sm"
-              variant="ghost"
-              onClick={handleClear}
-              className="rounded-full h-8 px-4 text-xs"
-            >
-              <EraserIcon weight="bold" />
-              Clear
-            </Button>
-          </>
-        )}
-
-        <div className="w-px h-4 bg-border/70 mx-1" />
-        <span className="font-mono text-xs text-muted-foreground/50 px-3 select-none tracking-wider">
-          ⌘↵
-        </span>
+          </span>
+        </div>
       </div>
     </div>
   );
