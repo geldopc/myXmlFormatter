@@ -95,7 +95,7 @@ const highlightStyle = HighlightStyle.define([
   { tag: t.special(t.string), color: "var(--xml-color-cdata)" },
   { tag: t.content, color: "var(--xml-color-text)" },
   { tag: [t.angleBracket, t.punctuation], color: "var(--xml-color-punct)" },
-  { tag: t.docType, color: "var(--xml-color-doctype)" },
+  { tag: t.documentMeta, color: "var(--xml-color-doctype)" },
 ]);
 
 export const editorTheme: Extension = [baseTheme, syntaxHighlighting(highlightStyle)];
