@@ -18,6 +18,7 @@ interface BorderGlowProps {
   colors?: string[];
   fillOpacity?: number;
   borderColor?: string;
+  id?: string;
 }
 
 interface AnimateParams {
@@ -114,6 +115,7 @@ export function BorderGlow({
   colors = ["#c084fc", "#f472b6", "#38bdf8"],
   fillOpacity = 0.5,
   borderColor,
+  id,
 }: BorderGlowProps) {
   const cardRef = React.useRef<HTMLDivElement>(null);
 
@@ -223,7 +225,7 @@ export function BorderGlow({
 
   return (
     <div
-      id="border-glow"
+      id={id}
       ref={cardRef}
       onPointerMove={handlePointerMove}
       className={`border-glow-card ${className}`}
