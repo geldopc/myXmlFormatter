@@ -16,6 +16,7 @@ import {
 import { decodeFromUrl, encodeForUrl } from "@utils/encoding";
 import { isMac } from "@utils/platform";
 import { formatXml, minifyXml, sanitizeXml } from "@utils/xml";
+import { BorderGlow } from "@widgets/BorderGlow";
 import { FindReplace } from "@widgets/FindReplace";
 import { ThemeToggle } from "@widgets/ThemeToggle";
 import * as React from "react";
@@ -42,6 +43,10 @@ export function Home() {
   });
 
   const { theme } = useTheme();
+  const isDark =
+    theme === "system"
+      ? window.matchMedia("(prefers-color-scheme: dark)").matches
+      : theme === "dark";
   const prevThemeRef = React.useRef(theme);
 
   const viewRef = React.useRef<EditorView | null>(null);
@@ -231,9 +236,23 @@ export function Home() {
         className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2"
         style={{ animation: "slide-up 0.5s cubic-bezier(0.16,1,0.3,1) both" }}
       >
+        <BorderGlow
+          borderRadius={9999}
+          backgroundColor="color-mix(in oklch, var(--background) 85%, transparent)"
+          glowColor={isDark ? "0 0 90" : "38 65 28"}
+          glowRadius={10}
+          glowIntensity={0.5}
+          coneSpread={10}
+          edgeSensitivity={10}
+          colors={isDark ? ["#D4A853", "#B8B8C0", "#B07D5A"] : ["#1a1a1a", "#8B6914", "#7A4522"]}
+          borderColor={isDark ? undefined : "rgb(0 0 0 / 12%)"}
+          fillOpacity={0.08}
+          className="backdrop-blur-xl"
+          animated
+        >
         <div
           id="floating-toolbar"
-          className="flex items-center gap-0.5 rounded-full border border-border bg-background/80 backdrop-blur-xl px-1.5 py-1.5 shadow-2xl"
+          className="flex items-center gap-0.5 px-1.5 py-1.5"
         >
           <Button
             id="btn-pretty"
@@ -376,6 +395,7 @@ export function Home() {
           <div className="mx-1 h-4 w-px bg-border/70" />
           <ThemeToggle />
         </div>
+        </BorderGlow>
       </div>
       <React.Suspense fallback={null}>
         <ThemeOverlay
