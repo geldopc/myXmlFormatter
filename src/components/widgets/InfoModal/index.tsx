@@ -37,6 +37,7 @@ export function InfoModal({ onClose }: InfoModalProps) {
       <button
         id="info-modal-backdrop"
         type="button"
+        tabIndex={-1}
         aria-label="Close"
         onClick={onClose}
         className="absolute inset-0 cursor-default bg-background/85 backdrop-blur-sm"

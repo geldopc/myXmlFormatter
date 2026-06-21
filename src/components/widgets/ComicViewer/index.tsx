@@ -18,14 +18,23 @@ function randomIndex(exclude: number): number {
 export function ComicViewer({ onClose }: ComicViewerProps) {
   const [index, setIndex] = React.useState(() => Math.floor(Math.random() * comics.length));
   const [loading, setLoading] = React.useState(true);
+  const [errorCount, setErrorCount] = React.useState(0);
   const comic = comics[index];
   const rootRef = React.useRef<HTMLDivElement>(null);
   useFocusTrap(rootRef, true);
 
   const shuffle = React.useCallback(() => {
+    setErrorCount(0);
     setLoading(true);
     setIndex((i) => randomIndex(i));
   }, []);
+
+  function handleError() {
+    if (errorCount >= 3) return;
+    setErrorCount((c) => c + 1);
+    setIndex((i) => randomIndex(i));
+    setLoading(false);
+  }
 
   React.useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -54,36 +63,45 @@ export function ComicViewer({ onClose }: ComicViewerProps) {
       <button
         id="comic-backdrop"
         type="button"
+        tabIndex={-1}
         aria-label="Close comic"
         onClick={onClose}
         className="absolute inset-0 cursor-default bg-background/85 backdrop-blur-xl"
       />
 
       <div id="comic-stage" className="relative z-10 flex flex-col items-center gap-3">
-        {loading && (
-          <div
-            id="comic-spinner"
-            className="absolute inset-0 flex items-center justify-center text-muted-foreground"
-          >
-            <SpinnerGapIcon weight="bold" size={28} className="animate-spin" />
-          </div>
-        )}
+        {errorCount >= 3 ? (
+          <p id="comic-error" className="text-sm text-muted-foreground px-8 text-center">
+            Comics unavailable right now. Try again later.
+          </p>
+        ) : (
+          <>
+            {loading && (
+              <div
+                id="comic-spinner"
+                className="absolute inset-0 flex items-center justify-center text-muted-foreground"
+              >
+                <SpinnerGapIcon weight="bold" size={28} className="animate-spin" />
+              </div>
+            )}
 
-        <img
-          id="comic-img"
-          src={comic?.src}
-          alt={comic?.title}
-          onLoad={() => setLoading(false)}
-          onError={() => setIndex((i) => randomIndex(i))}
-          className="rounded-xl border border-border shadow-2xl"
-          style={{
-            maxHeight: "78vh",
-            maxWidth: "90vw",
-            objectFit: "contain",
-            opacity: loading ? 0 : 1,
-            transition: "opacity 0.2s ease",
-          }}
-        />
+            <img
+              id="comic-img"
+              src={comic?.src}
+              alt={comic?.title}
+              onLoad={() => setLoading(false)}
+              onError={handleError}
+              className="rounded-xl border border-border shadow-2xl"
+              style={{
+                maxHeight: "78vh",
+                maxWidth: "90vw",
+                objectFit: "contain",
+                opacity: loading ? 0 : 1,
+                transition: "opacity 0.2s ease",
+              }}
+            />
+          </>
+        )}
 
         <div id="comic-bar" className="flex w-full items-center justify-between gap-3 px-1">
           <a

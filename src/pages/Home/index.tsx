@@ -404,8 +404,8 @@ export function Home() {
         </BorderGlow>
       </div>
       <SideToolbar
-        onInfoOpen={() => setIsInfoOpen(true)}
-        onComicOpen={() => setIsComicOpen(true)}
+        onInfoOpen={() => { setIsComicOpen(false); setIsInfoOpen(true); }}
+        onComicOpen={() => { setIsInfoOpen(false); setIsComicOpen(true); }}
       />
       <React.Suspense fallback={null}>
         <ThemeOverlay

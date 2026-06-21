@@ -170,26 +170,33 @@ export function BorderGlow({
   React.useEffect(() => {
     if (!animated || !cardRef.current) return;
     const card = cardRef.current;
+    let cancelled = false;
     const angleStart = sweepReverse ? 465 : 110;
     const angleEnd = sweepReverse ? 110 : 465;
 
     const startSweep = () => {
+      if (cancelled) return;
       card.classList.add("sweep-active");
       card.style.setProperty("--cursor-angle", `${angleStart}deg`);
 
       animateValue({
         duration: 500,
-        onUpdate: (v) => card.style.setProperty("--edge-proximity", String(v)),
+        onUpdate: (v) => {
+          if (cancelled) return;
+          card.style.setProperty("--edge-proximity", String(v));
+        },
       });
       animateValue({
         ease: easeInCubic,
         duration: 1500,
         end: 50,
-        onUpdate: (v) =>
+        onUpdate: (v) => {
+          if (cancelled) return;
           card.style.setProperty(
             "--cursor-angle",
             `${((angleEnd - angleStart) * (v / 100) + angleStart).toFixed(3)}deg`
-          ),
+          );
+        },
       });
       animateValue({
         ease: easeOutCubic,
@@ -197,11 +204,13 @@ export function BorderGlow({
         duration: 2250,
         start: 50,
         end: 100,
-        onUpdate: (v) =>
+        onUpdate: (v) => {
+          if (cancelled) return;
           card.style.setProperty(
             "--cursor-angle",
             `${((angleEnd - angleStart) * (v / 100) + angleStart).toFixed(3)}deg`
-          ),
+          );
+        },
       });
       animateValue({
         ease: easeInCubic,
@@ -209,16 +218,23 @@ export function BorderGlow({
         duration: 1500,
         start: 100,
         end: 0,
-        onUpdate: (v) => card.style.setProperty("--edge-proximity", String(v)),
-        onEnd: () => card.classList.remove("sweep-active"),
+        onUpdate: (v) => {
+          if (cancelled) return;
+          card.style.setProperty("--edge-proximity", String(v));
+        },
+        onEnd: () => {
+          if (cancelled) return;
+          card.classList.remove("sweep-active");
+        },
       });
     };
 
     if (animatedDelay > 0) {
       const t = window.setTimeout(startSweep, animatedDelay);
-      return () => window.clearTimeout(t);
+      return () => { cancelled = true; window.clearTimeout(t); };
     }
     startSweep();
+    return () => { cancelled = true; };
   }, [animated, animatedDelay, sweepReverse]);
 
   const glowVars = buildGlowVars(glowColor, glowIntensity);
