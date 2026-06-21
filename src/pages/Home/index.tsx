@@ -29,6 +29,9 @@ const SuccessBurst = React.lazy(() =>
 const ThemeOverlay = React.lazy(() =>
   import("@widgets/ThemeOverlay").then((m) => ({ default: m.ThemeOverlay }))
 );
+const ComicViewer = React.lazy(() =>
+  import("@widgets/ComicViewer").then((m) => ({ default: m.ComicViewer }))
+);
 
 export function Home() {
   const [input, setInput] = React.useState("");
@@ -408,6 +411,11 @@ export function Home() {
           onDone={() => setThemeAnim({ key: 0, variant: "sun" })}
         />
       </React.Suspense>
+      {isComicOpen && (
+        <React.Suspense fallback={null}>
+          <ComicViewer onClose={() => setIsComicOpen(false)} />
+        </React.Suspense>
+      )}
     </div>
   );
 }
