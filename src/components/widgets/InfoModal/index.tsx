@@ -44,8 +44,7 @@ export function InfoModal({ onClose }: InfoModalProps) {
 
       <div
         id="info-modal-card"
-        className="relative z-10 w-full max-w-sm rounded-2xl border border-border bg-background p-6 shadow-2xl"
-        style={{ animation: "slide-up 0.3s cubic-bezier(0.16,1,0.3,1) both" }}
+        className="relative z-10 w-full max-w-sm rounded-2xl border border-border bg-background p-6 shadow-2xl animate-slide-up"
       >
         <Button
           id="info-modal-close"
