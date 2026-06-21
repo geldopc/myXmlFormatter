@@ -32,6 +32,9 @@ const ThemeOverlay = React.lazy(() =>
 const ComicViewer = React.lazy(() =>
   import("@widgets/ComicViewer").then((m) => ({ default: m.ComicViewer }))
 );
+const InfoModal = React.lazy(() =>
+  import("@widgets/InfoModal").then((m) => ({ default: m.InfoModal }))
+);
 
 export function Home() {
   const [input, setInput] = React.useState("");
@@ -414,6 +417,11 @@ export function Home() {
       {isComicOpen && (
         <React.Suspense fallback={null}>
           <ComicViewer onClose={() => setIsComicOpen(false)} />
+        </React.Suspense>
+      )}
+      {isInfoOpen && (
+        <React.Suspense fallback={null}>
+          <InfoModal onClose={() => setIsInfoOpen(false)} />
         </React.Suspense>
       )}
     </div>
