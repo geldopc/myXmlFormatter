@@ -18,7 +18,7 @@ import { isMac } from "@utils/platform";
 import { formatXml, minifyXml, sanitizeXml } from "@utils/xml";
 import { BorderGlow } from "@widgets/BorderGlow";
 import { FindReplace } from "@widgets/FindReplace";
-import { ThemeToggle } from "@widgets/ThemeToggle";
+import { SideToolbar } from "@modules/SideToolbar";
 import * as React from "react";
 import { toast } from "sonner";
 import { useTheme } from "@hooks/Theme";
@@ -35,6 +35,8 @@ export function Home() {
   const [isDragging, setIsDragging] = React.useState(false);
   const [urlLoaded, setUrlLoaded] = React.useState(false);
   const [isFindOpen, setIsFindOpen] = React.useState(false);
+  const [isComicOpen, setIsComicOpen] = React.useState(false);
+  const [isInfoOpen, setIsInfoOpen] = React.useState(false);
 
   const [burst, setBurst] = React.useState(0);
   const [themeAnim, setThemeAnim] = React.useState<{ key: number; variant: "sun" | "moon" }>({
@@ -392,11 +394,13 @@ export function Home() {
               </>
             )}
           </span>
-          <div className="mx-1 h-4 w-px bg-border/70" />
-          <ThemeToggle />
         </div>
         </BorderGlow>
       </div>
+      <SideToolbar
+        onInfoOpen={() => setIsInfoOpen(true)}
+        onComicOpen={() => setIsComicOpen(true)}
+      />
       <React.Suspense fallback={null}>
         <ThemeOverlay
           triggerKey={themeAnim.key}
