@@ -20,12 +20,29 @@ import { FindReplace } from "@widgets/FindReplace";
 import { ThemeToggle } from "@widgets/ThemeToggle";
 import * as React from "react";
 import { toast } from "sonner";
+import { useTheme } from "@hooks/Theme";
+
+const SuccessBurst = React.lazy(() =>
+  import("@widgets/SuccessBurst").then((m) => ({ default: m.SuccessBurst }))
+);
+const ThemeOverlay = React.lazy(() =>
+  import("@widgets/ThemeOverlay").then((m) => ({ default: m.ThemeOverlay }))
+);
 
 export function Home() {
   const [input, setInput] = React.useState("");
   const [isDragging, setIsDragging] = React.useState(false);
   const [urlLoaded, setUrlLoaded] = React.useState(false);
   const [isFindOpen, setIsFindOpen] = React.useState(false);
+
+  const [burst, setBurst] = React.useState(0);
+  const [themeAnim, setThemeAnim] = React.useState<{ key: number; variant: "sun" | "moon" }>({
+    key: 0,
+    variant: "sun",
+  });
+
+  const { theme } = useTheme();
+  const prevThemeRef = React.useRef(theme);
 
   const viewRef = React.useRef<EditorView | null>(null);
   const inputRef = React.useRef(input);
@@ -43,6 +60,15 @@ export function Home() {
       .finally(() => setUrlLoaded(true));
   }, []);
 
+  React.useEffect(() => {
+    if (prevThemeRef.current === theme) return;
+    const goingDark =
+      theme === "dark" ||
+      (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    setThemeAnim((prev) => ({ key: prev.key + 1, variant: goingDark ? "moon" : "sun" }));
+    prevThemeRef.current = theme;
+  }, [theme]);
+
   function process(fmt: "pretty" | "minify") {
     const current = inputRef.current;
     if (!current.trim()) return;
@@ -53,6 +79,7 @@ export function Home() {
       return;
     }
     setInput(result.value);
+    setBurst((b) => b + 1);
     requestAnimationFrame(() => {
       viewRef.current?.dispatch({
         selection: { anchor: 0 },
@@ -194,6 +221,9 @@ export function Home() {
           }}
         />
         {isFindOpen && <FindReplace view={viewRef.current} onClose={() => setIsFindOpen(false)} />}
+        <React.Suspense fallback={null}>
+          <SuccessBurst triggerKey={burst} onDone={() => setBurst(0)} />
+        </React.Suspense>
       </div>
 
       <div
@@ -347,6 +377,13 @@ export function Home() {
           <ThemeToggle />
         </div>
       </div>
+      <React.Suspense fallback={null}>
+        <ThemeOverlay
+          triggerKey={themeAnim.key}
+          variant={themeAnim.variant}
+          onDone={() => setThemeAnim({ key: 0, variant: "sun" })}
+        />
+      </React.Suspense>
     </div>
   );
 }
