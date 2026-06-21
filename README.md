@@ -1,6 +1,6 @@
-&lt;!-- LANGUAGE-SELECTOR:START -->
+<!-- LANGUAGE-SELECTOR:START -->
 🌐 [English](README.md) · [Português](README.pt-BR.md)
-&lt;!-- LANGUAGE-SELECTOR:END -->
+<!-- LANGUAGE-SELECTOR:END -->
 
 <div align="center">
 
@@ -8,69 +8,60 @@
 
 # myXmlFormatter
 
-**A minimal, full-screen XML formatter built with React 19 and TypeScript.**
+**A minimal, full-screen XML formatter — prettify, minify, find/replace and share, right in your browser. No server, no sign-up, no clutter.**
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-geldopc.github.io-black?style=flat-square)](https://geldopc.github.io/myXmlFormatter/)
-[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white)](https://react.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
-[![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev)
-[![License: MIT](https://img.shields.io/badge/License-MIT-black?style=flat-square)](LICENSE)
+[![Live demo](https://img.shields.io/badge/live%20demo-online-22c55e?style=flat-square)](https://geldopc.github.io/myXmlFormatter/)
+[![React](https://img.shields.io/badge/React-19-149ECA?style=flat-square&logo=react&logoColor=white)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vite.dev)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![License: MIT](https://img.shields.io/badge/license-MIT-black?style=flat-square)](#license)
+
+### [→ Open the live app](https://geldopc.github.io/myXmlFormatter/)
 
 </div>
 
 ---
 
-## What it is
+## Why
 
-Most XML formatters live in a sidebar. This one takes over the entire screen — edit, format, and inspect XML the way a developer actually works: full focus, no distractions.
-
-Paste raw XML, press `⌘ Enter` to prettify or minify in-place, then share the result via a compressed URL — no server required.
-
-**[→ Try it live](https://geldopc.github.io/myXmlFormatter/)**
-
----
+Most online XML tools are buried in ads, ship your data to a server, or make you scroll past a wall of options. **myXmlFormatter** is the opposite: one full-screen editor, the few actions you actually use, and everything happens locally in your browser. Paste, prettify, share the link — done.
 
 ## Features
 
-| Feature | Details |
-|---------|---------|
-| **In-place formatting** | Prettify and minify replace the input directly — no split panels |
-| **Dracula syntax highlighting** | Custom tokenizer colors tags, attributes, values, comments, PIs, CDATA, and DOCTYPE separately in both light and dark mode |
-| **Shareable URLs** | XML is gzip-compressed with the native `CompressionStream` API and base64-encoded into the URL — zero dependencies |
-| **Drag-and-drop** | Drop any `.xml` file to load it instantly |
-| **Line numbers** | Synchronized gutter that tracks both the textarea and the read-only `<pre>` view |
-| **XML sanitization** | Pre-pass strips malformed pseudo-comments (`<-- ... -->`) common in Brazilian NF-e documents before parsing |
-| **Light & dark mode** | Theme toggle in the floating toolbar, persisted to `localStorage` |
-| **Keyboard shortcuts** | `⌘ Enter` to format, `Esc` to return to edit mode |
+- ⚡ **Prettify & minify** in one click or one keystroke — with auto-sanitization of pseudo-comments like `<-- ... -->` common in Brazilian NF-e documents.
+- 🎨 **Live syntax highlighting** powered by CodeMirror 6 — tags, attributes, values, comments, processing instructions, CDATA, and DOCTYPE each get their own color.
+- 📂 **Fold/Unfold** — collapse any XML block to focus on what matters; fold gutter in the left margin.
+- 🔍 **Find & Replace** with **match case**, **whole word**, and **regex** — every match highlighted, with a live `current/total` counter.
+- 🔗 **Share via URL** — the XML is gzip-compressed and encoded into the link itself, so there is no server and nothing is stored.
+- 📋 **Copy** to clipboard and 📂 **drag & drop** a `.xml` file to load it instantly.
+- ⌨️ **Keyboard-first** — prettify, find, fold, and undo without leaving the keyboard.
+- 🙂 **Comic break** — a random developer comic from [developerslife.tech](https://developerslife.tech/en/) for when you need a laugh.
+- 🪶 **100% client-side** — no backend, no tracking of your XML; deployed for free on GitHub Pages.
 
----
+## Keyboard shortcuts
 
-## Tech decisions worth noting
-
-**No syntax-highlighting library.** `src/utils/xmlHighlight.ts` is a hand-rolled left-to-right tokenizer (~120 lines) that handles comments, CDATA, DOCTYPE, processing instructions, and nested attributes. It keeps the bundle small and avoids a 200 KB dependency for a task this focused.
-
-**No URL-state library.** Shareable URLs use the browser's native `CompressionStream("gzip")` and `btoa` — available in all modern browsers since Chrome 80, Firefox 113, and Safari 16.4. The compressed XML typically shrinks 70–80% before encoding.
-
-**No backend.** Everything runs in the browser. Deployment is a static artifact via GitHub Actions → GitHub Pages.
-
-**Atomic design with shadcn/ui.** Components follow the atoms → molecules → organisms hierarchy (`elements/`, `widgets/`, `modules/`). shadcn/ui primitives are used for the Button and Tooltip components; nothing more.
-
----
+| Action | Shortcut |
+| --- | --- |
+| Prettify | `Ctrl`/`⌘` + `Enter` |
+| Find & Replace | `Ctrl`/`⌘` + `F` |
+| Fold block | `Ctrl`/`⌘` + `Alt`/`⌥` + `[` |
+| Unfold block | `Ctrl`/`⌘` + `Alt`/`⌥` + `]` |
+| Next / previous match (in Find) | `Enter` / `Shift` + `Enter` |
+| Close panel | `Esc` |
 
 ## Tech stack
 
-| Layer | Choice | Why |
-|-------|--------|-----|
-| Framework | React 19 | Concurrent features + improved Server Components API |
-| Language | TypeScript 5.8 | Strict mode throughout |
-| Build | Vite 6 | Sub-second HMR, native ESM |
-| Styling | Tailwind CSS v4 | CSS-first config, no PostCSS setup |
-| Icons | Phosphor Icons | Consistent weight variants |
-| Linting | Biome 2 | Single tool for lint + format |
-| Deployment | GitHub Actions + Pages | Zero-config CI/CD |
-
----
+| Layer | Choice |
+|-------|--------|
+| Framework | React 19 |
+| Language | TypeScript 5.8 |
+| Build | Vite 6 |
+| Editor | CodeMirror 6 + `@uiw/react-codemirror` |
+| Styling | Tailwind CSS v4 |
+| Icons | Phosphor Icons |
+| Linting | Biome 2 |
+| Deployment | GitHub Actions + Pages |
 
 ## Getting started
 
@@ -88,30 +79,6 @@ npm run build        # TypeScript check + Vite build
 npm run lint         # Biome lint
 npm run format       # Biome format
 ```
-
----
-
-## Project structure
-
-```
-src/
-├── components/
-│   ├── elements/    # atoms — Button, etc.
-│   ├── widgets/     # molecules — ThemeToggle
-│   └── modules/     # organisms — Navbar (unused after redesign)
-├── pages/
-│   └── Home/        # single-page app, all editor logic
-├── providers/
-│   └── Theme/       # light/dark theme context
-├── utils/
-│   ├── xml.ts           # formatXml, minifyXml, sanitizeXml
-│   ├── xmlHighlight.ts  # custom XML tokenizer for syntax coloring
-│   └── encoding.ts      # gzip + base64 for shareable URLs
-└── routes/
-    └── index.tsx    # react-router-dom v7 with GitHub Pages basename
-```
-
----
 
 ## License
 
