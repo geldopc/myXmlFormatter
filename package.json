@@ -1,7 +1,7 @@
 {
   "name": "my-xml-formatter",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "lint": "biome lint ./src",
     "format": "biome format ./src --write",
-    "check": "biome check ./src --write"
+    "check": "biome check ./src --write",
+    "build:local": "tsc -b && vite build --config vite.test.config.ts",
+    "preview:local": "vite preview --config vite.test.config.ts"
   },
   "dependencies": {
     "@codemirror/lang-xml": "^6.1.0",
