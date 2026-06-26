@@ -97,7 +97,7 @@ function prettify(node: Node, depth = 0): string {
       lines.push(`${indent}<${tag}>${children[0].textContent}</${el.tagName}>`);
     } else {
       lines.push(`${indent}<${tag}>`);
-      children.forEach((child) => lines.push(prettify(child, depth + 1)));
+      for (const child of children) lines.push(prettify(child, depth + 1));
       lines.push(`${indent}</${el.tagName}>`);
     }
   } else if (node.nodeType === Node.TEXT_NODE) {

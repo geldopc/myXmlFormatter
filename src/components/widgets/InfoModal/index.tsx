@@ -1,8 +1,8 @@
 import { Button } from "@elements/Button";
 import { useFocusTrap } from "@hooks/FocusTrap";
-import { ShortcutRow } from "@widgets/InfoModal/ShortcutRow";
 import { XIcon } from "@phosphor-icons/react";
 import { isMac } from "@utils/platform";
+import { ShortcutRow } from "@widgets/InfoModal/ShortcutRow";
 import * as React from "react";
 
 interface InfoModalProps {

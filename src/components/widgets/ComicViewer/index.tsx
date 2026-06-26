@@ -2,8 +2,8 @@ import { Button } from "@elements/Button";
 import { Tooltip } from "@elements/Tooltip";
 import { useFocusTrap } from "@hooks/FocusTrap";
 import { ArrowSquareOutIcon, ShuffleIcon, SpinnerGapIcon, XIcon } from "@phosphor-icons/react";
-import { comics } from "@/assets/comics";
 import * as React from "react";
+import { comics } from "@/assets/comics";
 
 interface ComicViewerProps {
   onClose: () => void;

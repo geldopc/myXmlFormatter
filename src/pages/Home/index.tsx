@@ -2,6 +2,8 @@ import { foldAll, unfoldAll } from "@codemirror/language";
 import { EditorView } from "@codemirror/view";
 import { Button } from "@elements/Button";
 import { Tooltip } from "@elements/Tooltip";
+import { useTheme } from "@hooks/Theme";
+import { SideToolbar } from "@modules/SideToolbar";
 import { XmlEditor } from "@modules/XmlEditor";
 import {
   ArrowsInSimpleIcon,
@@ -18,10 +20,8 @@ import { isMac } from "@utils/platform";
 import { formatXml, minifyXml, sanitizeXml } from "@utils/xml";
 import { BorderGlow } from "@widgets/BorderGlow";
 import { FindReplace } from "@widgets/FindReplace";
-import { SideToolbar } from "@modules/SideToolbar";
 import * as React from "react";
 import { toast } from "sonner";
-import { useTheme } from "@hooks/Theme";
 
 const SuccessBurst = React.lazy(() =>
   import("@widgets/SuccessBurst").then((m) => ({ default: m.SuccessBurst }))
@@ -263,154 +263,157 @@ export function Home() {
           className="backdrop-blur-xl"
           animated
         >
-        <div
-          id="floating-toolbar"
-          className="flex items-center gap-0.5 px-1.5 py-1.5"
-        >
-          <Button
-            id="btn-pretty"
-            size="sm"
-            onClick={() => process("pretty")}
-            disabled={!input.trim()}
-            className="rounded-full h-8 px-2 sm:pl-4 sm:pr-2 text-xs"
-          >
-            <CodeIcon weight="bold" />
-            <span className="hidden sm:inline">Prettify</span>
-            <span id="kbd-pretty" className="hidden sm:inline-flex items-center gap-0.5 ml-1">
+          <div id="floating-toolbar" className="flex items-center gap-0.5 px-1.5 py-1.5">
+            <Button
+              id="btn-pretty"
+              size="sm"
+              onClick={() => process("pretty")}
+              disabled={!input.trim()}
+              className="rounded-full h-8 px-2 sm:pl-4 sm:pr-2 text-xs"
+            >
+              <CodeIcon weight="bold" />
+              <span className="hidden sm:inline">Prettify</span>
+              <span id="kbd-pretty" className="hidden sm:inline-flex items-center gap-0.5 ml-1">
+                {isMac() ? (
+                  <>
+                    <kbd className="rounded border border-primary-foreground/25 bg-primary-foreground/10 px-1 py-0.5 font-mono text-xs text-primary-foreground/70 select-none">
+                      ⌘
+                    </kbd>
+                    <span className="font-mono text-xs text-primary-foreground/40">+</span>
+                    <kbd className="rounded border border-primary-foreground/25 bg-primary-foreground/10 px-1 py-0.5 font-mono text-xs text-primary-foreground/70 select-none">
+                      ↵
+                    </kbd>
+                  </>
+                ) : (
+                  <>
+                    <kbd className="rounded border border-primary-foreground/25 bg-primary-foreground/10 px-1 py-0.5 font-mono text-xs text-primary-foreground/70 select-none">
+                      Ctrl
+                    </kbd>
+                    <span className="font-mono text-xs text-primary-foreground/40">+</span>
+                    <kbd className="rounded border border-primary-foreground/25 bg-primary-foreground/10 px-1 py-0.5 font-mono text-xs text-primary-foreground/70 select-none">
+                      ↵
+                    </kbd>
+                  </>
+                )}
+              </span>
+            </Button>
+
+            <Tooltip label="bye, whitespace">
+              <Button
+                id="btn-minify"
+                size="icon"
+                variant="ghost"
+                onClick={() => process("minify")}
+                disabled={!input.trim()}
+                className="rounded-full"
+              >
+                <MinusCircleIcon weight="bold" />
+              </Button>
+            </Tooltip>
+
+            <div className="mx-1 h-4 w-px bg-border/70" />
+
+            <Tooltip label="fold all">
+              <Button
+                id="btn-fold-all"
+                size="icon"
+                variant="ghost"
+                onClick={handleFoldAll}
+                disabled={!input.trim()}
+                className="rounded-full"
+              >
+                <ArrowsInSimpleIcon weight="bold" />
+              </Button>
+            </Tooltip>
+
+            <Tooltip label="unfold all">
+              <Button
+                id="btn-unfold-all"
+                size="icon"
+                variant="ghost"
+                onClick={handleUnfoldAll}
+                disabled={!input.trim()}
+                className="rounded-full"
+              >
+                <ArrowsOutSimpleIcon weight="bold" />
+              </Button>
+            </Tooltip>
+
+            {input && (
+              <>
+                <div className="mx-1 h-4 w-px bg-border/70" />
+                <Tooltip label="yoink">
+                  <Button
+                    id="btn-copy"
+                    size="icon"
+                    variant="ghost"
+                    onClick={handleCopy}
+                    className="rounded-full"
+                  >
+                    <CopyIcon weight="bold" />
+                  </Button>
+                </Tooltip>
+                <Tooltip label="spread the XML">
+                  <Button
+                    id="btn-share"
+                    size="icon"
+                    variant="ghost"
+                    onClick={handleShare}
+                    className="rounded-full"
+                  >
+                    <LinkIcon weight="bold" />
+                  </Button>
+                </Tooltip>
+                <Tooltip label="burn it all">
+                  <Button
+                    id="btn-clear"
+                    size="icon"
+                    variant="ghost"
+                    onClick={handleClear}
+                    className="rounded-full"
+                  >
+                    <EraserIcon weight="bold" />
+                  </Button>
+                </Tooltip>
+              </>
+            )}
+
+            <div className="mx-1 hidden h-4 w-px bg-border/70 sm:block" />
+            <span id="kbd-find-hint" className="hidden sm:inline-flex items-center gap-0.5 px-2">
               {isMac() ? (
                 <>
-                  <kbd className="rounded border border-primary-foreground/25 bg-primary-foreground/10 px-1 py-0.5 font-mono text-xs text-primary-foreground/70 select-none">
+                  <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-mono text-xs text-muted-foreground select-none">
                     ⌘
                   </kbd>
-                  <span className="font-mono text-xs text-primary-foreground/40">+</span>
-                  <kbd className="rounded border border-primary-foreground/25 bg-primary-foreground/10 px-1 py-0.5 font-mono text-xs text-primary-foreground/70 select-none">
-                    ↵
+                  <span className="font-mono text-xs text-muted-foreground/40">+</span>
+                  <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-mono text-xs text-muted-foreground select-none">
+                    F
                   </kbd>
                 </>
               ) : (
                 <>
-                  <kbd className="rounded border border-primary-foreground/25 bg-primary-foreground/10 px-1 py-0.5 font-mono text-xs text-primary-foreground/70 select-none">
+                  <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-mono text-xs text-muted-foreground select-none">
                     Ctrl
                   </kbd>
-                  <span className="font-mono text-xs text-primary-foreground/40">+</span>
-                  <kbd className="rounded border border-primary-foreground/25 bg-primary-foreground/10 px-1 py-0.5 font-mono text-xs text-primary-foreground/70 select-none">
-                    ↵
+                  <span className="font-mono text-xs text-muted-foreground/40">+</span>
+                  <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-mono text-xs text-muted-foreground select-none">
+                    F
                   </kbd>
                 </>
               )}
             </span>
-          </Button>
-
-          <Tooltip label="bye, whitespace">
-            <Button
-              id="btn-minify"
-              size="icon"
-              variant="ghost"
-              onClick={() => process("minify")}
-              disabled={!input.trim()}
-              className="rounded-full"
-            >
-              <MinusCircleIcon weight="bold" />
-            </Button>
-          </Tooltip>
-
-          <div className="mx-1 h-4 w-px bg-border/70" />
-
-          <Tooltip label="fold all">
-            <Button
-              id="btn-fold-all"
-              size="icon"
-              variant="ghost"
-              onClick={handleFoldAll}
-              disabled={!input.trim()}
-              className="rounded-full"
-            >
-              <ArrowsInSimpleIcon weight="bold" />
-            </Button>
-          </Tooltip>
-
-          <Tooltip label="unfold all">
-            <Button
-              id="btn-unfold-all"
-              size="icon"
-              variant="ghost"
-              onClick={handleUnfoldAll}
-              disabled={!input.trim()}
-              className="rounded-full"
-            >
-              <ArrowsOutSimpleIcon weight="bold" />
-            </Button>
-          </Tooltip>
-
-          {input && (
-            <>
-              <div className="mx-1 h-4 w-px bg-border/70" />
-              <Tooltip label="yoink">
-                <Button
-                  id="btn-copy"
-                  size="icon"
-                  variant="ghost"
-                  onClick={handleCopy}
-                  className="rounded-full"
-                >
-                  <CopyIcon weight="bold" />
-                </Button>
-              </Tooltip>
-              <Tooltip label="spread the XML">
-                <Button
-                  id="btn-share"
-                  size="icon"
-                  variant="ghost"
-                  onClick={handleShare}
-                  className="rounded-full"
-                >
-                  <LinkIcon weight="bold" />
-                </Button>
-              </Tooltip>
-              <Tooltip label="burn it all">
-                <Button
-                  id="btn-clear"
-                  size="icon"
-                  variant="ghost"
-                  onClick={handleClear}
-                  className="rounded-full"
-                >
-                  <EraserIcon weight="bold" />
-                </Button>
-              </Tooltip>
-            </>
-          )}
-
-          <div className="mx-1 hidden h-4 w-px bg-border/70 sm:block" />
-          <span id="kbd-find-hint" className="hidden sm:inline-flex items-center gap-0.5 px-2">
-            {isMac() ? (
-              <>
-                <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-mono text-xs text-muted-foreground select-none">
-                  ⌘
-                </kbd>
-                <span className="font-mono text-xs text-muted-foreground/40">+</span>
-                <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-mono text-xs text-muted-foreground select-none">
-                  F
-                </kbd>
-              </>
-            ) : (
-              <>
-                <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-mono text-xs text-muted-foreground select-none">
-                  Ctrl
-                </kbd>
-                <span className="font-mono text-xs text-muted-foreground/40">+</span>
-                <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-mono text-xs text-muted-foreground select-none">
-                  F
-                </kbd>
-              </>
-            )}
-          </span>
-        </div>
+          </div>
         </BorderGlow>
       </div>
       <SideToolbar
-        onInfoOpen={() => { setIsComicOpen(false); setIsInfoOpen(true); }}
-        onComicOpen={() => { setIsInfoOpen(false); setIsComicOpen(true); }}
+        onInfoOpen={() => {
+          setIsComicOpen(false);
+          setIsInfoOpen(true);
+        }}
+        onComicOpen={() => {
+          setIsInfoOpen(false);
+          setIsComicOpen(true);
+        }}
       />
       <React.Suspense fallback={null}>
         <ThemeOverlay

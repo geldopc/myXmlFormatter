@@ -55,11 +55,22 @@ function buildGlowVars(glowColor: string, intensity: number): Record<string, str
 }
 
 const GRADIENT_POSITIONS = [
-  "80% 55%", "69% 34%", "8% 6%", "41% 38%", "86% 85%", "82% 18%", "51% 4%",
+  "80% 55%",
+  "69% 34%",
+  "8% 6%",
+  "41% 38%",
+  "86% 85%",
+  "82% 18%",
+  "51% 4%",
 ];
 const GRADIENT_KEYS = [
-  "--gradient-one", "--gradient-two", "--gradient-three", "--gradient-four",
-  "--gradient-five", "--gradient-six", "--gradient-seven",
+  "--gradient-one",
+  "--gradient-two",
+  "--gradient-three",
+  "--gradient-four",
+  "--gradient-five",
+  "--gradient-six",
+  "--gradient-seven",
 ];
 const COLOR_MAP = [0, 1, 2, 0, 1, 2, 1];
 
@@ -84,8 +95,13 @@ function easeInCubic(x: number): number {
 }
 
 function animateValue({
-  start = 0, end = 100, duration = 1000, delay = 0,
-  ease = easeOutCubic, onUpdate, onEnd,
+  start = 0,
+  end = 100,
+  duration = 1000,
+  delay = 0,
+  ease = easeOutCubic,
+  onUpdate,
+  onEnd,
 }: AnimateParams) {
   const t0 = performance.now() + delay;
   function tick() {
@@ -231,10 +247,15 @@ export function BorderGlow({
 
     if (animatedDelay > 0) {
       const t = window.setTimeout(startSweep, animatedDelay);
-      return () => { cancelled = true; window.clearTimeout(t); };
+      return () => {
+        cancelled = true;
+        window.clearTimeout(t);
+      };
     }
     startSweep();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [animated, animatedDelay, sweepReverse]);
 
   const glowVars = buildGlowVars(glowColor, glowIntensity);
