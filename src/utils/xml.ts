@@ -79,10 +79,7 @@ function prettify(node: Node, depth = 0): string {
 
     if (children.length === 0) {
       lines.push(`${indent}<${tag} />`);
-    } else if (
-      children.length === 1 &&
-      children[0].nodeType === Node.TEXT_NODE
-    ) {
+    } else if (children.length === 1 && children[0].nodeType === Node.TEXT_NODE) {
       lines.push(`${indent}<${tag}>${children[0].textContent}</${el.tagName}>`);
     } else {
       lines.push(`${indent}<${tag}>`);
@@ -92,6 +89,8 @@ function prettify(node: Node, depth = 0): string {
   } else if (node.nodeType === Node.TEXT_NODE) {
     const text = node.textContent?.trim();
     if (text) lines.push(`${indent}${text}`);
+  } else if (node.nodeType === Node.CDATA_SECTION_NODE) {
+    lines.push(`${indent}<![CDATA[${node.textContent}]]>`);
   } else if (node.nodeType === Node.COMMENT_NODE) {
     lines.push(`${indent}<!-- ${node.textContent?.trim()} -->`);
   }
