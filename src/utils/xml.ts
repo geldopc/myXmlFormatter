@@ -6,6 +6,7 @@ export type ProcessResult = {
 export type SanitizeResult = {
   value: string;
   removedCount: number;
+  fixedCdataCount: number;
 };
 
 export function sanitizeXml(xml: string): SanitizeResult {
@@ -16,7 +17,20 @@ export function sanitizeXml(xml: string): SanitizeResult {
     return "";
   });
   // Collapse excessive blank lines left behind by removals
-  return { value: cleaned.replace(/\n{3,}/g, "\n\n"), removedCount };
+  const collapsed = cleaned.replace(/\n{3,}/g, "\n\n");
+
+  // Auto-close CDATA sections that are missing the ]]> closing marker.
+  // Matches <![CDATA[ followed by content with no ]]> before the parent closing tag.
+  let fixedCdataCount = 0;
+  const fixed = collapsed.replace(
+    /<!\[CDATA\[((?:(?!\]\]>)[\s\S])*?)(<\/)/g,
+    (_match, content, closeTag) => {
+      fixedCdataCount++;
+      return `<![CDATA[${content}]]>${closeTag}`;
+    }
+  );
+
+  return { value: fixed, removedCount, fixedCdataCount };
 }
 
 export function formatXml(input: string): ProcessResult {

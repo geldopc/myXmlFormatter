@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.2] — 2026-06-26
+
+### Fixed
+- `sanitizeXml` now auto-closes unclosed CDATA sections (missing `]]>` before the closing tag) — NF-e/NFC-e documents with truncated `<qrCode>` URLs no longer fail to parse. A warning toast is shown when CDATA was auto-fixed, since content may be truncated.
+
+---
+
 ## [0.1.1] — 2026-06-26
 
 ### Fixed

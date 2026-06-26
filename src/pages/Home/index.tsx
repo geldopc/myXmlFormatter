@@ -85,7 +85,7 @@ export function Home() {
   function process(fmt: "pretty" | "minify") {
     const current = inputRef.current;
     if (!current.trim()) return;
-    const { value: sanitized, removedCount } = sanitizeXml(current);
+    const { value: sanitized, removedCount, fixedCdataCount } = sanitizeXml(current);
     const result = fmt === "pretty" ? formatXml(sanitized) : minifyXml(sanitized);
     if (result.error) {
       toast.error("That doesn't look like XML", { description: result.error });
@@ -99,6 +99,11 @@ export function Home() {
         effects: EditorView.scrollIntoView(0, { y: "start" }),
       });
     });
+    if (fixedCdataCount > 0) {
+      toast.warning("CDATA auto-closed", {
+        description: `${fixedCdataCount} CDATA section${fixedCdataCount === 1 ? " was" : "s were"} missing ]]> — content may be truncated.`,
+      });
+    }
     const fixNote =
       removedCount > 0
         ? `Tidied up ${removedCount} thing${removedCount === 1 ? "" : "s"} along the way.`
